@@ -25,6 +25,9 @@ const GROUP_CHAT = 'GROUP_CHAT';
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const MONGO_URI = process.env.MONGO_URI;
+const MONGO_USER = process.env.MONGO_USER;
+const MONGO_PASSWORD = process.env.MONGO_PASSWORD;
+const MONGO_DATABASE_NAME = process.env.MONGO_DATABASE_NAME;
 const PORT = process.env.PORT;
 module.exports = {
     GENDER_MALE,
@@ -36,6 +39,9 @@ module.exports = {
     ROLE_INVENTORY,
     JWT_SECRET,
     MONGO_URI,
+    MONGO_USER,
+    MONGO_PASSWORD,
+    MONGO_DATABASE_NAME,
     PORT,
     STATUS_PAID,
     STATUS_UNPAID,

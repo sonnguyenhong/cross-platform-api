@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const mainRouter = require("./routes/index");
 const { PORT } = require("./constants/constants");
-const { MONGO_URI } = require("./constants/constants");
+const { MONGO_URI, MONGO_USER, MONGO_PASSWORD, MONGO_DATABASE_NAME } = require("./constants/constants");
 const bodyParser = require('body-parser');
 const app = express();
 const app2 = express();
@@ -21,9 +21,9 @@ const { Socket } = require('dgram');
 mongoose.connect(MONGO_URI, {
     useUnifiedTopology: true,
     useNewUrlParser: true,
-    user: 'sonnguyenhong',
-    pass: 'QulVsvxURZQFDOEy',
-    dbName: 'cross-platform-db',
+    user: MONGO_USER,
+    pass: MONGO_PASSWORD,
+    dbName: MONGO_DATABASE_NAME,
     useFindAndModify: false
 })
     .then(res => {
