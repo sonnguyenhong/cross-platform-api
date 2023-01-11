@@ -9,17 +9,22 @@ const usersController = {};
 
 usersController.register = async (req, res, next) => {
     try {
+        console.log(req.body)
         const {
+            firstName,
+            lastName,
+            birthday,
+            gender,
             phonenumber,
             password,
-            username,
         } = req.body;
 
         let user = await UserModel.findOne({
             phonenumber: phonenumber
         })
-
+        
         if (user) {
+            console.log(123)
             return res.status(httpStatus.BAD_REQUEST).json({
                 message: 'Phone number already exists'
             });
@@ -32,7 +37,10 @@ usersController.register = async (req, res, next) => {
         user = new UserModel({
             phonenumber: phonenumber,
             password: hashedPassword,
-            username: username,
+            firstName: firstName,
+            lastName: lastName,
+            birthday: birthday,
+            gender: gender,
             avatar: "60c39f54f0b2c4268eb53367",
             cover_image: "60c39eb8f0b2c4268eb53366"
         });

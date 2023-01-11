@@ -21,9 +21,9 @@ const { Socket } = require('dgram');
 mongoose.connect(MONGO_URI, {
     useUnifiedTopology: true,
     useNewUrlParser: true,
-    user: MONGO_USER,
-    pass: MONGO_PASSWORD,
-    dbName: MONGO_DATABASE_NAME,
+    // user: MONGO_USER,
+    // pass: MONGO_PASSWORD,
+    // dbName: MONGO_DATABASE_NAME,
     useFindAndModify: false
 })
     .then(res => {
@@ -38,6 +38,13 @@ mongoose.connect(MONGO_URI, {
 
 // use middleware to enable cors
 app.use(cors());
+app.use(function (req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
 // route middleware
