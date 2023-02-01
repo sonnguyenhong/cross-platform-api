@@ -1,43 +1,45 @@
 require('dotenv').config();
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const mainRouter = require("./routes/index");
-const { PORT } = require("./constants/constants");
-const { MONGO_URI, MONGO_USER, MONGO_PASSWORD, MONGO_DATABASE_NAME } = require("./constants/constants");
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const mainRouter = require('./routes/index');
+const { PORT } = require('./constants/constants');
+const { MONGO_URI, MONGO_USER, MONGO_PASSWORD, MONGO_DATABASE_NAME } = require('./constants/constants');
 const bodyParser = require('body-parser');
 const app = express();
 const app2 = express();
 const http = require('http');
 const chatServer = http.createServer(app2);
-const { Server } = require("socket.io");
+const { Server } = require('socket.io');
 const io = new Server(chatServer);
-const jwt = require("jsonwebtoken");
-const chatController = require("./controllers/Chats");
+const jwt = require('jsonwebtoken');
+const chatController = require('./controllers/Chats');
 const { Socket } = require('dgram');
+const path = require('path');
 // const MessageModel = require("../models/Messages");
 
 // connect to mongodb
-mongoose.connect(MONGO_URI, {
-    useUnifiedTopology: true,
-    useNewUrlParser: true,
-    // user: MONGO_USER,
-    // pass: MONGO_PASSWORD,
-    // dbName: MONGO_DATABASE_NAME,
-    useFindAndModify: false
-})
-    .then(res => {
-        console.log("connected to mongodb");
+mongoose
+    .connect(MONGO_URI, {
+        useUnifiedTopology: true,
+        useNewUrlParser: true,
+        // user: MONGO_USER,
+        // pass: MONGO_PASSWORD,
+        // dbName: MONGO_DATABASE_NAME,
+        useFindAndModify: false,
     })
-    .catch(err => {
+    .then((res) => {
+        console.log('connected to mongodb');
+    })
+    .catch((err) => {
         console.log(err);
-    })
+    });
 
 // use middleware to parse body req to json
 
-
 // use middleware to enable cors
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'files')));
 app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
@@ -45,19 +47,18 @@ app.use(function (req, res, next) {
     res.setHeader('Access-Control-Allow-Credentials', true);
     next();
 });
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true, parameterLimit: 50000 }));
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true, parameterLimit: 50000 }));
 // route middleware
-app.use("/", mainRouter);
+app.use('/', mainRouter);
 
 app.get('/settings', function (req, res) {
     res.send('Settings Page');
 });
 
-
 app.listen(PORT, () => {
-    console.log("server start - " + PORT);
-})
+    console.log('server start - ' + PORT);
+});
 
 var socketIds = {};
 var mapSocketIds = {};
@@ -81,7 +82,7 @@ io.on('connection', (socket) => {
             mapSocketIds[socket.id] = decoded.id;
             console.log('a user connected, account devices: ' + socketIds[decoded.id]);
         } catch (e) {
-            console.log("Invalid token")
+            console.log('Invalid token');
         }
     }
     // socket.emit('message', 'Hello world');
@@ -124,7 +125,7 @@ io.on('connection', (socket) => {
                 console.log(e);
             }
         }
-    })
+    });
 
     socket.on('blockers', async (msg) => {
         // console.log(msg.token)
@@ -133,12 +134,12 @@ io.on('connection', (socket) => {
                 decoded = jwt.verify(msg.token, process.env.JWT_SECRET);
                 msg.senderId = decoded.id;
                 delete msg.token;
-                if(msg.type == "block"){
+                if (msg.type == 'block') {
                     msg.data = await chatController.blockChat(msg);
-                }else{
+                } else {
                     msg.data = await chatController.unBlockChat(msg);
                 }
-                
+
                 delete msg.chatId;
                 if (msg.data !== null) {
                     if (socketIds[msg.senderId]) {
@@ -156,7 +157,7 @@ io.on('connection', (socket) => {
                 console.log(e);
             }
         }
-    })
+    });
 
     socket.on('recallmessage', async (msg) => {
         // console.log(msg.token)
@@ -166,7 +167,7 @@ io.on('connection', (socket) => {
                 msg.senderId = decoded.id;
                 delete msg.token;
                 msg.data = await chatController.recallMessage(msg);
-                
+
                 delete msg.chatId;
                 if (msg.data !== null) {
                     if (socketIds[msg.senderId]) {
@@ -184,7 +185,7 @@ io.on('connection', (socket) => {
                 console.log(e);
             }
         }
-    })
+    });
 
     socket.on('seenMessage', async (msg) => {
         // console.log(msg.token)
@@ -198,10 +199,9 @@ io.on('connection', (socket) => {
                 console.log(e);
             }
         }
-    })
+    });
 });
 
-
 chatServer.listen(3000, () => {
-    console.log("server chat start - " + 3000);
-})
+    console.log('server chat start - ' + 3000);
+});
