@@ -296,6 +296,18 @@ postsController.list = async (req, res, next) => {
             postItem.isLike = postItem.like.includes(req.userId);
             postWithIsLike.push(postItem);
         }
+        postWithIsLike = postWithIsLike.sort((post1, post2) => {
+            const updatedAt1 = new Date(post1.updatedAt).getTime();
+            const updatedAt2 = new Date(post2.updatedAt).getTime();
+
+            if (updatedAt1 < updatedAt2) {
+                return 1;
+            } else if (updatedAt1 > updatedAt2) {
+                return -1;
+            } else {
+                return 0;
+            }
+        });
         return res.status(httpStatus.OK).json({
             data: postWithIsLike,
         });
