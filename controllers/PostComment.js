@@ -1,8 +1,8 @@
-const PostModel = require("../models/Posts");
-const UserModel = require("../models/Users");
-const PostCommentModel = require("../models/PostComment");
-const FriendModel = require("../models/Friends");
-const httpStatus = require("../utils/httpStatus");
+const PostModel = require('../models/Posts');
+const UserModel = require('../models/Users');
+const PostCommentModel = require('../models/PostComment');
+const FriendModel = require('../models/Friends');
+const httpStatus = require('../utils/httpStatus');
 const postCommentController = {};
 postCommentController.create = async (req, res, next) => {
     try {
@@ -11,43 +11,51 @@ postCommentController.create = async (req, res, next) => {
         try {
             post = await PostModel.findById(req.params.postId);
             if (post == null) {
-                return res.status(httpStatus.NOT_FOUND).json({message: "Can not find post"});
+                return res.status(httpStatus.NOT_FOUND).json({ message: 'Can not find post' });
             }
         } catch (error) {
-            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message: error.message});
+            return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
         }
-        const {
-            content,
-            commentAnswered
-        } = req.body;
-
+        const { content, commentAnswered } = req.body;
+        if (!content || content === '') {
+            return res.status(httpStatus.BAD_REQUEST).json({
+                message: 'Bạn chưa nhập bình luận',
+            });
+        }
         const postComment = new PostCommentModel({
             user: userId,
             post: post._id,
             content: content,
-            commentAnswered: commentAnswered ? commentAnswered : null
+            commentAnswered: commentAnswered ? commentAnswered : null,
         });
 
         let postCommentSaved = await postComment.save();
         // update countComments post
-        console.log(req.params.postId)
-        console.log(post.countComments ? post.countComments + 1 : 1)
+        console.log(req.params.postId);
+        console.log(post.countComments ? post.countComments + 1 : 1);
         let postSaved = await PostModel.findByIdAndUpdate(req.params.postId, {
-            countComments: post.countComments ? post.countComments + 1 : 1
-        })
-        postCommentSaved = await PostCommentModel.findById(postCommentSaved._id).populate('user', [
-            'username', 'phonenumber'
-        ]);
+            countComments: post.countComments ? post.countComments + 1 : 1,
+        });
+        postCommentSaved = await PostCommentModel.findById(postCommentSaved._id).populate({
+            path: 'user',
+            select: '_id firstName lastName phonenumber avatar',
+            model: 'Users',
+            populate: {
+                path: 'avatar',
+                select: '_id fileName',
+                model: 'Documents',
+            },
+        });
         return res.status(httpStatus.OK).json({
             data: postCommentSaved,
-            post: postSaved
+            post: postSaved,
         });
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            message: e.message
+            message: e.message,
         });
     }
-}
+};
 
 postCommentController.list = async (req, res, next) => {
     try {
@@ -55,14 +63,14 @@ postCommentController.list = async (req, res, next) => {
         // get list friend:
         let userId = req.userId;
         let friends = await FriendModel.find({
-            status: "1",
+            status: '1',
         }).or([
             {
-                sender: userId
+                sender: userId,
             },
             {
-                receiver: userId
-            }
+                receiver: userId,
+            },
         ]);
         let listIdFriends = [];
         // console.log(friends)
@@ -80,7 +88,7 @@ postCommentController.list = async (req, res, next) => {
             user: listIdFriends,
         }).populate({
             path: 'user',
-            select: '_id username phonenumber avatar',
+            select: '_id firstName lastName phonenumber avatar',
             model: 'Users',
             populate: {
                 path: 'avatar',
@@ -91,16 +99,15 @@ postCommentController.list = async (req, res, next) => {
         let post;
         post = await PostModel.findById(req.params.postId);
         if (post == null) {
-            return res.status(httpStatus.NOT_FOUND).json({message: "Can not find post"});
+            return res.status(httpStatus.NOT_FOUND).json({ message: 'Can not find post' });
         }
         return res.status(httpStatus.OK).json({
             data: postComments,
-            countComments: post.countComments, 
+            countComments: post.countComments,
         });
     } catch (error) {
-        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({message: error.message});
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({ message: error.message });
     }
-
-}
+};
 
 module.exports = postCommentController;
