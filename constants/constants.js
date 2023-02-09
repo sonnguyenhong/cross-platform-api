@@ -29,6 +29,10 @@ const MONGO_USER = process.env.MONGO_USER;
 const MONGO_PASSWORD = process.env.MONGO_PASSWORD;
 const MONGO_DATABASE_NAME = process.env.MONGO_DATABASE_NAME;
 const PORT = process.env.PORT;
+
+// Number of loaded posts
+const LIMIT_POSTS = 5;
+
 module.exports = {
     GENDER_MALE,
     GENDER_FEMALE,
@@ -49,6 +53,6 @@ module.exports = {
     DOCUMENT_TYPE_IMAGE,
     DOCUMENT_TYPE_OTHER,
     PRIVATE_CHAT,
-    GROUP_CHAT
-}
-
+    GROUP_CHAT,
+    LIMIT_POSTS,
+};

@@ -6,9 +6,10 @@ const DocumentModel = require('../models/Documents');
 var url = require('url');
 const httpStatus = require('../utils/httpStatus');
 const bcrypt = require('bcrypt');
-const { JWT_SECRET } = require('../constants/constants');
+const { JWT_SECRET, LIMIT_POSTS } = require('../constants/constants');
 const { ROLE_CUSTOMER } = require('../constants/constants');
 const uploadFile = require('../functions/uploadFile');
+const mongoose = require('mongoose');
 
 const postsController = {};
 postsController.create = async (req, res, next) => {
@@ -228,6 +229,8 @@ postsController.delete = async (req, res, next) => {
 
 postsController.list = async (req, res, next) => {
     try {
+        const existedPosts = req.body.existedPosts;
+        const existedPostIds = existedPosts.map((post) => mongoose.Types.ObjectId(post._id));
         let posts = [];
         let userId = req.userId;
         if (req.query.userId) {
@@ -235,6 +238,9 @@ postsController.list = async (req, res, next) => {
             posts = await PostModel.find({
                 author: req.query.userId,
             })
+                .where('_id')
+                .nin(existedPostIds)
+                .limit(LIMIT_POSTS)
                 .populate('images', ['fileName'])
                 .populate('videos', ['fileName'])
                 .populate({
@@ -277,6 +283,9 @@ postsController.list = async (req, res, next) => {
             posts = await PostModel.find({
                 author: listIdFriends,
             })
+                .where('_id')
+                .nin(existedPostIds)
+                .limit(LIMIT_POSTS)
                 .populate('images', ['fileName'])
                 .populate('videos', ['fileName'])
                 .populate({
