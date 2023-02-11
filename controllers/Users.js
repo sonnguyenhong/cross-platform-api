@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const UserModel = require('../models/Users');
 const DocumentModel = require('../models/Documents');
+const PostModel = require('../models/Posts');
 const httpStatus = require('../utils/httpStatus');
 const bcrypt = require('bcrypt');
 const { JWT_SECRET } = require('../constants/constants');
@@ -152,6 +153,27 @@ usersController.edit = async (req, res, next) => {
                                 });
                                 savedAvatarDocument = await avatarDocument.save();
                             }
+
+                            let avatarPost = null;
+
+                            if (savedAvatarDocument !== null) {
+                                avatarPost = new PostModel({
+                                    author: userId,
+                                    described: 'Thay đổi ảnh đại diện',
+                                    images: [savedAvatarDocument._id],
+                                    countComments: 0,
+                                });
+                            } else {
+                                avatarPost = new PostModel({
+                                    author: userId,
+                                    described: 'Thay đổi ảnh đại diện',
+                                    images: [],
+                                    countComments: 0,
+                                });
+                            }
+                            if (avatarPost) {
+                                const avatarPostSaved = (await avatarPost.save()).populate('images');
+                            }
                         } else {
                             savedAvatarDocument = await DocumentModel.findById(avatar);
                         }
@@ -168,6 +190,26 @@ usersController.edit = async (req, res, next) => {
                                     type: coverImageResult.type,
                                 });
                                 savedCoverImageDocument = await coverImageDocument.save();
+                            }
+
+                            let coverImagePost = null;
+                            if (savedCoverImageDocument !== null) {
+                                coverImagePost = new PostModel({
+                                    author: userId,
+                                    described: 'Thay đổi ảnh bìa',
+                                    images: [savedCoverImageDocument._id],
+                                    countComments: 0,
+                                });
+                            } else {
+                                coverImagePost = new PostModel({
+                                    author: userId,
+                                    described: 'Thay đổi ảnh bìa',
+                                    images: [],
+                                    countComments: 0,
+                                });
+                            }
+                            if (coverImagePost) {
+                                const coverImagePostSaved = (await coverImagePost.save()).populate('images');
                             }
                         } else {
                             savedCoverImageDocument = await DocumentModel.findById(cover_image);
