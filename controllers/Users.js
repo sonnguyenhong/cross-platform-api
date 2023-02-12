@@ -81,7 +81,7 @@ usersController.login = async (req, res, next) => {
         const { phonenumber, password } = req.body;
         const user = await UserModel.findOne({
             phonenumber: phonenumber,
-        });
+        }).populate('avatar');
         if (!user) {
             return res.status(httpStatus.BAD_REQUEST).json({
                 message: 'Username or password incorrect',
@@ -111,6 +111,7 @@ usersController.login = async (req, res, next) => {
                 username: user.username,
                 firstName: user.firstName,
                 lastName: user.lastName,
+                avatar: user.avatar,
             },
             token: token,
         });
@@ -124,7 +125,10 @@ usersController.edit = async (req, res, next) => {
     try {
         let userId = req.params.id;
         let user;
-        const { avatar, cover_image } = req.body;
+        let { avatar, cover_image } = req.body;
+        console.log(avatar.substring(0, 10));
+        avatar = `data:image/jpg;base64,${avatar}`;
+        cover_image = `data:image/jpg;base64,${cover_image}`;
         const dataUserUpdate = {};
         const listPros = [
             'username',
