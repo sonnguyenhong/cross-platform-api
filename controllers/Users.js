@@ -249,7 +249,6 @@ usersController.edit = async (req, res, next) => {
             data: user,
         });
     } catch (e) {
-        console.log(e)
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             message: e.message,
         });
@@ -405,13 +404,8 @@ usersController.setBlockDiary = async (req, res, next) => {
             });
         }
         let type = req.body.type;
-        console.log(type)
         let user = await UserModel.findById(req.userId);
         blocked = user.blocked_diary;
-
-        // if (user.hasOwnProperty('blocked')) {
-        //     blocked = user.blocked_diary;
-        // }
 
         if (type) {
             //chặn 
@@ -425,8 +419,6 @@ usersController.setBlockDiary = async (req, res, next) => {
                 blocked.splice(index, 1);
             }
         }
-
-        console.log(blocked)
 
         user.blocked_diary = blocked;
         user.save();
