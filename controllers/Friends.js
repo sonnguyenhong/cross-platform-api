@@ -178,7 +178,6 @@ friendsController.setRemoveFriend = async (req, res, next) => {
 
 friendsController.listFriends = async (req, res, next) => {
     try {
-        // console.log(req);
         if (req.body.user_id == null) {
             let requested = await FriendModel.find({ sender: req.userId, status: '1' }).distinct('receiver');
             let accepted = await FriendModel.find({ receiver: req.userId, status: '1' }).distinct('sender');
@@ -196,11 +195,15 @@ friendsController.listFriends = async (req, res, next) => {
 
             friends = []
             // bỏ đi các user đã bị block
-            users.map((user, index) => {
-                if (user._id.toString().indexOf(blocked)) {
-                    friends.push(user)
-                }
-            })
+            if (blocked.length > 0) {
+                users.map((user, index) => {
+                    if (user._id.toString().indexOf(blocked) >= 0) {
+                        friends.push(user)
+                    }
+                })
+            } else {
+                friends = users
+            }
 
             res.status(200).json({
                 code: 200,
