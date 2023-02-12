@@ -184,7 +184,7 @@ friendsController.listFriends = async (req, res, next) => {
 
             // chủ tài khoản
             let own = await UserModel.findById(req.userId);
-            blocked = own.blocked_diary;
+            let blocked = own.blocked_diary;
 
             let users = await UserModel.find()
                 .where('_id')
@@ -193,11 +193,13 @@ friendsController.listFriends = async (req, res, next) => {
                 .populate('cover_image')
                 .exec();
 
+
+
             friends = []
             // bỏ đi các user đã bị block
             if (blocked.length > 0) {
                 users.map((user, index) => {
-                    if (user._id.toString().indexOf(blocked) >= 0) {
+                    if (blocked.includes(user._id.toString()) === false) {
                         friends.push(user)
                     }
                 })
