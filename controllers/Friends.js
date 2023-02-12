@@ -183,6 +183,10 @@ friendsController.listFriends = async (req, res, next) => {
             let requested = await FriendModel.find({ sender: req.userId, status: '1' }).distinct('receiver');
             let accepted = await FriendModel.find({ receiver: req.userId, status: '1' }).distinct('sender');
 
+            // chủ tài khoản
+            let own = await UserModel.findById(req.userId);
+            blocked = own.blocked_diary;
+
             let users = await UserModel.find()
                 .where('_id')
                 .in(requested.concat(accepted))
@@ -190,11 +194,19 @@ friendsController.listFriends = async (req, res, next) => {
                 .populate('cover_image')
                 .exec();
 
+            friends = []
+            // bỏ đi các user đã bị block
+            users.map((user, index) => {
+                if (user._id.toString().indexOf(blocked)) {
+                    friends.push(user)
+                }
+            })
+
             res.status(200).json({
                 code: 200,
                 message: 'Danh sách bạn bè',
                 data: {
-                    friends: users,
+                    friends: friends,
                 },
             });
         }
@@ -417,6 +429,28 @@ friendsController.cancelRequest = async (req, res, next) => {
                 message: 'Chưa gủi lời mới kết bạn',
             });
         }
+    } catch (e) {
+        return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+            message: e.message,
+        });
+    }
+};
+
+friendsController.listBlocks = async (req, res, next) => {
+    try {
+        // chủ tài khoản
+        let own = await UserModel.findById(req.userId);
+        blocked = own.blocked_diary;
+
+        let usersBlock = await UserModel.find({ _id: { $in: blocked } });
+
+        res.status(200).json({
+            code: 200,
+            message: 'Danh sách bạn bè bị block',
+            data: {
+                friends: usersBlock,
+            },
+        });
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             message: e.message,

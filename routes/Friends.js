@@ -14,5 +14,6 @@ friendsRoutes.post('/list', auth, friendController.listFriends);
 friendsRoutes.get('/list_suggested', auth, friendController.listSuggested);
 friendsRoutes.get('/list_requests', auth, friendController.listRequests);
 friendsRoutes.get('/status/:friendId', auth, friendController.friendStatus);
+friendsRoutes.get('/list_block', auth, friendController.listBlocks);
 
 module.exports = friendsRoutes;

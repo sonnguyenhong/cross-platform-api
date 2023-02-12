@@ -108,10 +108,17 @@ usersController.login = async (req, res, next) => {
             data: {
                 id: user._id,
                 phonenumber: user.phonenumber,
-                username: user.username,
+                username: user.firstName + " " + user.lastName,
                 firstName: user.firstName,
                 lastName: user.lastName,
                 avatar: user.avatar,
+                description: user.description,
+                address: user.address,
+                city: user.city,
+                country: user.country,
+                cover_image: user.cover_image,
+                blocked_inbox: user.blocked_inbox,
+                blocked_diary: user.blocked_diary
             },
             token: token,
         });
@@ -126,7 +133,6 @@ usersController.edit = async (req, res, next) => {
         let userId = req.params.id;
         let user;
         let { avatar, cover_image } = req.body;
-        console.log(avatar.substring(0, 10));
         avatar = `data:image/jpg;base64,${avatar}`;
         cover_image = `data:image/jpg;base64,${cover_image}`;
         const dataUserUpdate = {};
@@ -243,6 +249,7 @@ usersController.edit = async (req, res, next) => {
             data: user,
         });
     } catch (e) {
+        console.log(e)
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
             message: e.message,
         });
@@ -350,6 +357,7 @@ usersController.showByPhone = async (req, res, next) => {
 
 usersController.setBlock = async (req, res, next) => {
     try {
+        console.log(req)
         let targetId = req.body.user_id;
         if (targetId == req.params.id) {
             return res.status(httpStatus.BAD_REQUEST).json({
@@ -397,22 +405,28 @@ usersController.setBlockDiary = async (req, res, next) => {
             });
         }
         let type = req.body.type;
+        console.log(type)
         let user = await UserModel.findById(req.userId);
-        blocked = [];
-        if (user.hasOwnProperty('blocked')) {
-            blocked = user.blocked_diary;
-        }
+        blocked = user.blocked_diary;
+
+        // if (user.hasOwnProperty('blocked')) {
+        //     blocked = user.blocked_diary;
+        // }
 
         if (type) {
+            //chặn 
             if (blocked.indexOf(targetId) === -1) {
                 blocked.push(targetId);
             }
         } else {
+            // bỏ chặn
             const index = blocked.indexOf(targetId);
             if (index > -1) {
                 blocked.splice(index, 1);
             }
         }
+
+        console.log(blocked)
 
         user.blocked_diary = blocked;
         user.save();
