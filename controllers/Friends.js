@@ -193,19 +193,18 @@ friendsController.listFriends = async (req, res, next) => {
                 .populate('cover_image')
                 .exec();
 
-
-
             friends = []
             // bỏ đi các user đã bị block
-            if (blocked.length > 0) {
-                users.map((user, index) => {
-                    if (blocked.includes(user._id.toString()) === false) {
-                        friends.push(user)
-                    }
-                })
-            } else {
-                friends = users
-            }
+            users.map((user, index) => {
+                // danh sách chặn của bạn bè
+                let blockedFriend = user.blocked_diary
+                //nếu người ta chặn mình thì sẽ k hiển thị người ta
+                if (blocked.includes(user._id.toString()) === false &&
+                    blockedFriend.includes(req.userId.toString()) === false
+                ) {
+                    friends.push(user)
+                }
+            })
 
             res.status(200).json({
                 code: 200,
@@ -447,7 +446,10 @@ friendsController.listBlocks = async (req, res, next) => {
         let own = await UserModel.findById(req.userId);
         blocked = own.blocked_diary;
 
-        let usersBlock = await UserModel.find({ _id: { $in: blocked } });
+        let usersBlock = await UserModel.find({ _id: { $in: blocked } })
+            .populate('avatar')
+            .populate('cover_image')
+            .exec();
 
         res.status(200).json({
             code: 200,
