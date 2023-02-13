@@ -105,13 +105,14 @@ postsController.edit = async (req, res, next) => {
         }
 
         const { described, images, videos } = req.body;
+
         let dataImages = [];
         if (Array.isArray(images)) {
-            for (const image of images) {
+            for (let image of images) {
                 // check is old file
                 if (image) {
-                    let imageFile = !image.includes('data:') ? await DocumentModel.findById(image) : null;
-                    if (imageFile == null) {
+                    // let imageFile = !image.includes('data:') ? await DocumentModel.findById(image) : null;
+                    if (image.includes('data:')) {
                         if (uploadFile.matchesFileBase64(image) !== false) {
                             const imageResult = uploadFile.uploadFile(image);
                             if (imageResult !== false) {
@@ -127,7 +128,10 @@ postsController.edit = async (req, res, next) => {
                             }
                         }
                     } else {
-                        dataImages.push(image);
+                        const existedImage = await DocumentModel.findOne({
+                            fileName: image.split('/').at(-1),
+                        });
+                        dataImages.push(existedImage._id);
                     }
                 }
             }

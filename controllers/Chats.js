@@ -1,19 +1,13 @@
-const {
-    PRIVATE_CHAT,
-    GROUP_CHAT,
-} = require('../constants/constants');
-const ChatModel = require("../models/Chats");
-const MessagesModel = require("../models/Messages");
-const httpStatus = require("../utils/httpStatus");
+const { PRIVATE_CHAT, GROUP_CHAT } = require('../constants/constants');
+const ChatModel = require('../models/Chats');
+const MessagesModel = require('../models/Messages');
+const httpStatus = require('../utils/httpStatus');
 const chatController = {};
 
 chatController.getMessages = async (req, res, next) => {
     try {
         let chat = await ChatModel.findOne({
-            $and: [
-                { _id: req.params.chatId },
-                { members: req.userId }
-            ]
+            $and: [{ _id: req.params.chatId }, { members: req.userId }],
         }).populate('messsages');
         if (chat !== null) {
             let pivots = chat.pivots;
@@ -26,34 +20,30 @@ chatController.getMessages = async (req, res, next) => {
             }
             messsages = chat.messsages;
             messsages.splice(0, curPivot);
-            for(let i =0; i< messsages.length; i++){
-                if(messsages[i].isRecall){
+            for (let i = 0; i < messsages.length; i++) {
+                if (messsages[i].isRecall) {
                     messsages[i].content = 'Tin nhắn đã được thu hồi';
                 }
             }
             return res.status(httpStatus.OK).json({
                 blockers: chat.blockers,
                 chatId: chat._id,
-                data: messsages
+                data: messsages,
             });
         } else {
-            return res.status(httpStatus.NOT_FOUND).json({ message: "Not found conversation!" });
+            return res.status(httpStatus.NOT_FOUND).json({ message: 'Not found conversation!' });
         }
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            message: e.message
+            message: e.message,
         });
     }
-}
-
+};
 
 chatController.getMessagesByFriendId = async (req, res, next) => {
     try {
         let chat = await ChatModel.findOne({
-            $and: [
-                { members: { $all: [req.userId, req.params.friendId] } },
-                { members: { $size: 2 } }
-            ]
+            $and: [{ members: { $all: [req.userId, req.params.friendId] } }, { members: { $size: 2 } }],
         }).populate('messsages');
         if (chat !== null) {
             let pivots = chat.pivots;
@@ -66,15 +56,15 @@ chatController.getMessagesByFriendId = async (req, res, next) => {
             }
             messsages = chat.messsages;
             messsages.splice(0, curPivot);
-            for(let i =0; i< messsages.length; i++){
-                if(messsages[i].isRecall){
+            for (let i = 0; i < messsages.length; i++) {
+                if (messsages[i].isRecall) {
                     messsages[i].content = 'Tin nhắn đã được thu hồi';
                 }
             }
             return res.status(httpStatus.OK).json({
                 blockers: chat.blockers,
                 chatId: chat._id,
-                data: messsages
+                data: messsages,
             });
         } else {
             chat = new ChatModel({
@@ -88,23 +78,20 @@ chatController.getMessagesByFriendId = async (req, res, next) => {
             return res.status(httpStatus.OK).json({
                 blockers: [],
                 chatId: chat._id,
-                data: []
+                data: [],
             });
         }
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            message: e.message
+            message: e.message,
         });
     }
-}
+};
 
 chatController.deleteChat = async (req, res, next) => {
     try {
         let chat = await ChatModel.findOne({
-            $and: [
-                { _id: req.params.chatId },
-                { members: req.userId }
-            ]
+            $and: [{ _id: req.params.chatId }, { members: req.userId }],
         });
         if (chat != null) {
             let newPivot = chat.messsages.length;
@@ -115,25 +102,24 @@ chatController.deleteChat = async (req, res, next) => {
                     break;
                 }
             }
-            await ChatModel.updateOne({
-                $and: [
-                    { _id: req.params.chatId },
-                    { members: req.userId }
-                ]
-            }, { pivots: pivots });
+            await ChatModel.updateOne(
+                {
+                    $and: [{ _id: req.params.chatId }, { members: req.userId }],
+                },
+                { pivots: pivots },
+            );
             return res.status(httpStatus.OK).json({
-                message: "conversation deleted"
+                message: 'conversation deleted',
             });
         } else {
-            return res.status(httpStatus.NOT_FOUND).json({ message: "Not found conversation!" });
+            return res.status(httpStatus.NOT_FOUND).json({ message: 'Not found conversation!' });
         }
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            message: e.message
+            message: e.message,
         });
     }
-}
-
+};
 
 chatController.getChats = async (req, res, next) => {
     try {
@@ -142,8 +128,8 @@ chatController.getChats = async (req, res, next) => {
             model: 'Users',
             populate: {
                 path: 'avatar',
-                model: 'Documents'
-            }
+                model: 'Documents',
+            },
         });
         let results = [];
         for (let i = 0; i < chats.length; i++) {
@@ -167,23 +153,21 @@ chatController.getChats = async (req, res, next) => {
                 continue;
             }
             res.lastMessage = await MessagesModel.findOne({ _id: chats[i].messsages[chats[i].messsages.length - 1] });
-            if(res.lastMessage.isRecall){
+            if (res.lastMessage.isRecall) {
                 res.lastMessage.content = 'Tin nhắn đã được thu hồi';
             }
             results.push(res);
         }
 
         return res.status(httpStatus.OK).json({
-            data: results
+            data: results,
         });
-
     } catch (e) {
         return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-            message: e.message
+            message: e.message,
         });
     }
-}
-
+};
 
 chatController.saveMessage = async (msg) => {
     try {
@@ -194,21 +178,16 @@ chatController.saveMessage = async (msg) => {
                 $and: [
                     { _id: msg.chatId },
                     { members: { $all: [msg.senderId, msg.receiverId] } },
-                    { members: { $size: 2 } }
-                ]
+                    { members: { $size: 2 } },
+                ],
             });
         }
 
         if (!chat) {
             chat = await ChatModel.findOne({
-                $and: [
-                    { members: { $all: [msg.senderId, msg.receiverId] } },
-                    { members: { $size: 2 } }
-                ]
+                $and: [{ members: { $all: [msg.senderId, msg.receiverId] } }, { members: { $size: 2 } }],
             });
         }
-
-
 
         if (!chat) {
             chat = new ChatModel({
@@ -227,7 +206,7 @@ chatController.saveMessage = async (msg) => {
             senderId: msg.senderId,
             receiverId: msg.receiverId,
             content: msg.content,
-            chatId: chat._id
+            chatId: chat._id,
         });
         await message.save();
         chat.messsages.push(message);
@@ -245,20 +224,16 @@ chatController.saveMessage = async (msg) => {
             await ChatModel.updateOne({ _id: chat._id }, { seens: seens });
         }
 
-        return {chatId: chat._id, msgId: message._id};
+        return { chatId: chat._id, msgId: message._id };
     } catch (e) {
         console.log(e);
     }
-}
-
+};
 
 chatController.seenMessage = async (msg) => {
     try {
         let chat = await ChatModel.findOne({
-            $and: [
-                { _id: msg.chatId },
-                { members: msg.userId }
-            ]
+            $and: [{ _id: msg.chatId }, { members: msg.userId }],
         }).populate('messsages');
         if (chat == null) {
             return;
@@ -274,8 +249,7 @@ chatController.seenMessage = async (msg) => {
     } catch (e) {
         console.log(e);
     }
-}
-
+};
 
 chatController.blockChat = async (msg) => {
     try {
@@ -283,29 +257,26 @@ chatController.blockChat = async (msg) => {
             $and: [
                 { _id: msg.chatId },
                 { members: { $all: [msg.senderId, msg.receiverId] } },
-                { members: { $size: 2 } }
-            ]
+                { members: { $size: 2 } },
+            ],
         });
-        if (chat ==null){
+        if (chat == null) {
             chat = await ChatModel.findOne({
-                $and: [
-                    { members: { $all: [msg.senderId, msg.receiverId] } },
-                    { members: { $size: 2 } }
-                ]
+                $and: [{ members: { $all: [msg.senderId, msg.receiverId] } }, { members: { $size: 2 } }],
             });
         }
 
         if (chat != null) {
             let newBlockers = chat.blockers;
-            if(newBlockers.indexOf(msg.senderId) == -1){
+            if (newBlockers.indexOf(msg.senderId) == -1) {
                 newBlockers.push(msg.senderId);
                 chat.blockers = newBlockers;
                 await chat.save();
             }
             return {
                 blockers: newBlockers,
-                chatId: chat._id
-            }
+                chatId: chat._id,
+            };
         } else {
             chat = new ChatModel({
                 messsages: [],
@@ -317,15 +288,14 @@ chatController.blockChat = async (msg) => {
             await chat.save();
             return {
                 blockers: [msg.senderId],
-                chatId: chat._id
-            }
+                chatId: chat._id,
+            };
         }
     } catch (e) {
-        console.log(e)
+        console.log(e);
         return null;
     }
-}
-
+};
 
 chatController.unBlockChat = async (msg) => {
     try {
@@ -333,40 +303,35 @@ chatController.unBlockChat = async (msg) => {
             $and: [
                 { _id: msg.chatId },
                 { members: { $all: [msg.senderId, msg.receiverId] } },
-                { members: { $size: 2 } }
-            ]
+                { members: { $size: 2 } },
+            ],
         });
-        if (chat ==null){
+        if (chat == null) {
             chat = await ChatModel.findOne({
-                $and: [
-                    { members: { $all: [msg.senderId, msg.receiverId] } },
-                    { members: { $size: 2 } }
-                ]
+                $and: [{ members: { $all: [msg.senderId, msg.receiverId] } }, { members: { $size: 2 } }],
             });
         }
         if (chat != null) {
             let newBlockers = chat.blockers;
-            let index = newBlockers.indexOf(msg.senderId) ;
-            if(index != -1){
+            let index = newBlockers.indexOf(msg.senderId);
+            if (index != -1) {
                 newBlockers.splice(index, 1);
                 chat.blockers = newBlockers;
                 await chat.save();
             }
-          
+
             return {
                 blockers: newBlockers,
-                chatId: chat._id
-            }
+                chatId: chat._id,
+            };
         } else {
             return null;
         }
     } catch (e) {
-        console.log(e)
+        console.log(e);
         return null;
     }
-}
-
-
+};
 
 chatController.recallMessage = async (msg) => {
     try {
@@ -377,21 +342,16 @@ chatController.recallMessage = async (msg) => {
                 $and: [
                     { _id: msg.chatId },
                     { members: { $all: [msg.senderId, msg.receiverId] } },
-                    { members: { $size: 2 } }
-                ]
+                    { members: { $size: 2 } },
+                ],
             });
         }
 
         if (!chat) {
             chat = await ChatModel.findOne({
-                $and: [
-                    { members: { $all: [msg.senderId, msg.receiverId] } },
-                    { members: { $size: 2 } }
-                ]
+                $and: [{ members: { $all: [msg.senderId, msg.receiverId] } }, { members: { $size: 2 } }],
             });
         }
-
-
 
         if (!chat || msg.index < 0) {
             return null;
@@ -399,11 +359,11 @@ chatController.recallMessage = async (msg) => {
 
         let pivot = chat.pivots[chat.members.indexOf(msg.senderId)];
         let index = msg.index + pivot;
-        if(index >= chat.messsages.length) return null;
-      
-        let message = await MessagesModel.findOne({_id: chat.messsages[index]});
-        if(message == null || message.isRecall || message.senderId !=msg.senderId) return null;
-        console.log("n")
+        if (index >= chat.messsages.length) return null;
+
+        let message = await MessagesModel.findOne({ _id: chat.messsages[index] });
+        if (message == null || message.isRecall || message.senderId != msg.senderId) return null;
+        console.log('n');
         message.isRecall = true;
         await message.save();
         message.content = 'Tin nhắn đã được thu hồi';
@@ -411,8 +371,6 @@ chatController.recallMessage = async (msg) => {
     } catch (e) {
         console.log(e);
     }
-}
-
-
+};
 
 module.exports = chatController;
